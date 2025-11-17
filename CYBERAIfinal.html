@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberAI - Advanced Threat Detection</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'IBM Plex Mono', 'Consolas', monospace;
+      background-color: #0a0a12;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Cyber Background Elements */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(0, 82, 165, 0.15) 0%, transparent 20%),
+        radial-gradient(circle at 80% 70%, rgba(0, 102, 204, 0.15) 0%, transparent 20%),
+        linear-gradient(to bottom, transparent 95%, rgba(0, 102, 204, 0.1) 100%);
+      z-index: -1;
+    }
+    
+    .binary-code {
+      position: absolute;
+      color: rgba(0, 102, 204, 0.3);
+      font-size: 12px;
+      line-height: 1.4;
+      z-index: -1;
+      user-select: none;
+    }
+    
+    .circuit-lines {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      opacity: 0.05;
+      background-image: 
+        linear-gradient(90deg, #0052a5 1px, transparent 1px),
+        linear-gradient(0deg, #0052a5 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+    
+    .chat-container {
+      background: rgba(10, 15, 25, 0.9);
+      color: #e0e0e0;
+      width: 450px;
+      height: 700px;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(0, 82, 165, 0.3);
+      backdrop-filter: blur(4px);
+      position: relative;
+    }
+    
+    .chat-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 102, 204, 0.5), transparent);
+      box-shadow: 0 0 10px rgba(0, 102, 204, 0.3);
+    }
+
+    .header {
+      background: linear-gradient(to right, #0a1a2f, #0d2b50);
+      padding: 20px;
+      text-align: center;
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 18px;
+      position: relative;
+      border-bottom: 1px solid rgba(0, 82, 165, 0.5);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
+    }
+    
+    .status-indicator {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 12px;
+      height: 12px;
+      background-color: #00cc66;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00cc66;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 204, 102, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(0, 204, 102, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 204, 102, 0); }
+    }
+
+    .chat-body {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: rgba(5, 10, 20, 0.7);
+    }
+    
+    .message {
+      margin-bottom: 15px;
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      line-height: 1.4;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+      font-size: 14px;
+      border: 1px solid transparent;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .user-message {
+      margin-left: auto;
+      background: rgba(0, 82, 165, 0.3);
+      color: #e6f2ff;
+      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(0, 102, 204, 0.3);
+    }
+    
+    .bot-message {
+      margin-right: auto;
+      background: rgba(30, 40, 60, 0.5);
+      color: #e0e0e0;
+      border-bottom-left-radius: 4px;
+      border: 1px solid rgba(60, 90, 120, 0.3);
+    }
+    
+    .system-message {
+      margin: 10px auto;
+      background: rgba(0, 80, 0, 0.3);
+      color: #a0e0a0;
+      text-align: center;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 90%;
+      border: 1px solid rgba(0, 150, 0, 0.3);
+    }
+    
+    .threat-alert {
+      background: rgba(80, 0, 0, 0.3);
+      color: #ffaaaa;
+      border-left: 4px solid rgba(200, 50, 50, 0.7);
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 0 8px 8px 0;
+      border: 1px solid rgba(150, 50, 50, 0.3);
+    }
+    
+    .scan-progress {
+      height: 4px;
+      background: rgba(30, 40, 60, 0.5);
+      border-radius: 2px;
+      margin: 8px 0;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(to right, #0052a5, #0088ff);
+      width: 0%;
+      transition: width 1s ease;
+    }
+    
+    .timestamp {
+      font-size: 11px;
+      color: #6d7b8c;
+      margin-top: 4px;
+      text-align: right;
+    }
+    
+    .chat-footer {
+      display: flex;
+      border-top: 1px solid rgba(0, 82, 165, 0.3);
+      background: rgba(10, 20, 40, 0.7);
+      padding: 8px;
+    }
+    
+    .chat-footer input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 1px solid rgba(0, 82, 165, 0.3);
+      outline: none;
+      font-size: 14px;
+      border-radius: 24px;
+      margin: 0 8px;
+      background: rgba(20, 30, 50, 0.7);
+      color: #e0e0e0;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    
+    .chat-footer input:focus {
+      border-color: rgba(0, 102, 204, 0.7);
+      box-shadow: 0 0 8px rgba(0, 102, 204, 0.3);
+    }
+    
+    .chat-footer button {
+      background: linear-gradient(to bottom, #0a2b50, #0a1a2f);
+      border: 1px solid rgba(0, 102, 204, 0.5);
+      color: white;
+      padding: 0 20px;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .chat-footer button:hover {
+      background: linear-gradient(to bottom, #0a3b70, #0a2a4f);
+      box-shadow: 0 0 10px rgba(0, 102, 204, 0.3);
+    }
+    
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    
+    .quick-action {
+      background: rgba(0, 82, 165, 0.2);
+      color: #bbdefb;
+      padding: 8px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(0, 102, 204, 0.3);
+    }
+    
+    .quick-action:hover {
+      background: rgba(0, 102, 204, 0.4);
+      color: white;
+      border-color: rgba(0, 102, 204, 0.7);
+    }
+    
+    .typing-indicator {
+      display: flex;
+      padding: 12px 16px;
+    }
+    
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #6d7b8c;
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: typingAnimation 1.4s infinite ease-in-out;
+    }
+    
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    @keyframes typingAnimation {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+    
+    .safe-url-indicator {
+      background: rgba(0, 80, 0, 0.3); 
+      color: #a0e0a0; 
+      padding: 12px; 
+      border-radius: 8px; 
+      margin: 8px 0;
+      border: 1px solid rgba(0, 150, 0, 0.3);
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 82, 165, 0.5);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 102, 204, 0.7);
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Background binary code elements -->
+  <div class="binary-code" style="top: 10%; left: 5%;">10101010<br>01010101<br>11001100</div>
+  <div class="binary-code" style="bottom: 15%; right: 8%;">00110011<br>10101010<br>01010101</div>
+  <div class="circuit-lines"></div>
+
+  <div class="chat-container">
+    <div class="header">
+      🛡️ CyberAI - Advanced Threat Detection
+      <div class="status-indicator" title="Active Protection"></div>
+    </div>
+    <div class="chat-body" id="chat-body">
+      <div class="message system-message">System initialized • Threat database v3.4.2 • Last scan: Today</div>
+      <div class="message bot-message">
+        Hello! I'm CyberAI, your AI-powered cybersecurity assistant. 🚀<br> 
+        I can help detect and analyze various cyber threats in real-time.
+      </div>
+      <div class="message bot-message">
+        <strong>Quick actions:</strong>
+        <div class="quick-actions">
+          <div class="quick-action" onclick="quickAction('malware')">Scan for Malware</div>
+          <div class="quick-action" onclick="quickAction('network')">Network Analysis</div>
+          <div class="quick-action" onclick="quickAction('phishing')">Check Phishing</div>
+          <div class="quick-action" onclick="quickAction('vulnerabilities')">System Vulnerabilities</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-footer">
+      <input type="text" id="user-input" placeholder="Ask about threats or request a scan..." autocomplete="off" />
+      <button onclick="sendMessage()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const chatBody = document.getElementById('chat-body');
+    const userInput = document.getElementById('user-input');
+    let isScanning = false;
+    const API_KEY = 'AIzaSyDKl8x5GaJwCHaJo_Qr5Ky6MDWiRTxirmI'; // Your Google Safe Browsing API key
+
+    // Create more binary code elements for background
+    function createBinaryElements() {
+      const container = document.body;
+      for (let i = 0; i < 8; i++) {
+        const binary = document.createElement('div');
+        binary.className = 'binary-code';
+        binary.style.top = `${Math.random() * 80 + 10}%`;
+        binary.style.left = `${Math.random() * 80 + 10}%`;
+        binary.style.opacity = Math.random() * 0.3 + 0.1;
+        binary.textContent = generateBinaryLines();
+        container.appendChild(binary);
+      }
+    }
+
+    function generateBinaryLines() {
+      const lines = [];
+      for (let i = 0; i < 3; i++) {
+        let line = '';
+        for (let j = 0; j < 8; j++) {
+          line += Math.round(Math.random());
+        }
+        lines.push(line);
+      }
+      return lines.join('<br>');
+    }
+
+    // Initial system status
+    appendSystemMessage("Threat intelligence feed connected • Real-time monitoring active");
+    createBinaryElements();
+
+    function sendMessage() {
+      const message = userInput.value.trim();
+      if (message === '' || isScanning) return;
+
+      appendMessage('user', message);
+      userInput.value = '';
+      processUserMessage(message);
+    }
+
+    function quickAction(action) {
+      if (isScanning) return;
+      
+      let message;
+      switch(action) {
+        case 'malware': message = "Run full malware scan"; break;
+        case 'network': message = "Scan network for threats"; break;
+        case 'phishing': message = "Check for phishing attempts"; break;
+        case 'vulnerabilities': message = "Scan for system vulnerabilities"; break;
+        default: return;
+      }
+      
+      userInput.value = message;
+      sendMessage();
+    }
+
+    function appendMessage(sender, text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+      messageDiv.innerHTML = text;
+      
+      // Add timestamp
+      const timeDiv = document.createElement('div');
+      timeDiv.classList.add('timestamp');
+      timeDiv.textContent = getCurrentTime();
+      messageDiv.appendChild(timeDiv);
+      
+      chatBody.appendChild(messageDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function appendSystemMessage(text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', 'system-message');
+      messageDiv.innerHTML = text;
+      chatBody.appendChild(messageDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const typingDiv = document.createElement('div');
+      typingDiv.classList.add('message', 'bot-message', 'typing-indicator');
+      typingDiv.id = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      `;
+      chatBody.appendChild(typingDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+      const typingIndicator = document.getElementById('typing-indicator');
+      if (typingIndicator) {
+        typingIndicator.remove();
+      }
+    }
+
+    function createProgressBar() {
+      const progressDiv = document.createElement('div');
+      progressDiv.classList.add('scan-progress');
+      const barDiv = document.createElement('div');
+      barDiv.classList.add('progress-bar');
+      progressDiv.appendChild(barDiv);
+      return { container: progressDiv, bar: barDiv };
+    }
+
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function processUserMessage(message) {
+      isScanning = true;
+      showTypingIndicator();
+      
+      setTimeout(() => {
+        hideTypingIndicator();
+        analyzeThreat(message.toLowerCase());
+        isScanning = false;
+      }, 800);
+    }
+
+    function analyzeThreat(message) {
+      // Check for URLs in the message first
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urls = message.match(urlRegex);
+      
+      if (urls && urls.length > 0) {
+        analyzeUrls(urls);
+      } 
+      else if (message.includes('malware') || message.includes('virus') || message.includes('trojan')) {
+        simulateMalwareScan();
+      } 
+      else if (message.includes('network') || message.includes('scan') || message.includes('device')) {
+        simulateNetworkScan();
+      } 
+      else if (message.includes('phishing') || message.includes('email') || message.includes('url')) {
+        simulatePhishingCheck();
+      } 
+      else if (message.includes('vulnerability') || message.includes('weakness') || message.includes('cve')) {
+        simulateVulnerabilityScan();
+      } 
+      else if (message.includes('ransomware') || message.includes('encrypt')) {
+        simulateRansomwareCheck();
+      } 
+      else if (message.includes('firewall') || message.includes('block')) {
+        checkFirewallStatus();
+      } 
+      else if (message.includes('log') || message.includes('activity') || message.includes('history')) {
+        checkSystemLogs();
+      }
+      else if (message.includes('help') || message.includes('support') || message.includes('guide')) {
+        showHelp();
+      }
+      else {
+        appendMessage('bot', `🤖 I can analyze:<br>
+          • Phishing URLs (paste a suspicious URL)<br>
+          • Malware threats<br>
+          • Network vulnerabilities<br>
+          • System security status<br><br>
+          Try: "Scan this URL: http://paypal-login-verify.com"`);
+      }
+    }
+
+    async function analyzeUrls(urls) {
+      appendMessage('bot', '🔍 Analyzing URL(s) for phishing threats...');
+      
+      // Create progress bar
+      const { container, bar } = createProgressBar();
+      chatBody.appendChild(container);
+      
+      // Simulate scan progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 25;
+        bar.style.width = `${Math.min(progress, 100)}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            container.remove();
+            showUrlAnalysisResults(urls);
+          }, 500);
+        }
+      }, 200);
+    }
+
+    async function showUrlAnalysisResults(urls) {
+      let threatFound = false;
+      let resultHTML = '<div style="margin-top:10px;">';
+      
+      for (const url of urls) {
+        // Check if URL uses HTTPS
+        const isHttps = url.toLowerCase().startsWith('https://');
+        const isDangerous = !isHttps; // Consider HTTP as dangerous
+        
+        if (isDangerous) {
+          threatFound = true;
+          resultHTML += `
+            <div class="threat-alert">
+              <strong>🚨 UNSAFE URL DETECTED</strong><br>
+              URL: <span style="color:#ffaaaa;font-weight:bold;">${url}</span><br><br>
+              <strong>Threat Indicators:</strong><br>
+              • Connection is not secure (HTTP instead of HTTPS)<br>
+              • Data transmitted may be intercepted<br>
+              • No encryption for sensitive information<br><br>
+              <strong>Recommended Actions:</strong><br>
+              • Do not enter personal or financial information<br>
+              • Find a secure (HTTPS) alternative<br>
+              • Report to site administrator
+            </div>
+          `;
+        } else {
+          resultHTML += `
+            <div class="safe-url-indicator">
+              <strong>✅ SAFE URL</strong><br>
+              ${url}<br>
+              Secure HTTPS connection detected
+            </div>
+          `;
+        }
+      }
+      
+      resultHTML += '</div>';
+      
+      if (threatFound) {
+        appendSystemMessage("Unsafe URL detected • Security alert generated");
+      }
+      
+      appendMessage('bot', `🌐 URL Analysis Results:<br>${resultHTML}`);
+    }
+
+    function getRandomThreatIndicator() {
+      const indicators = [
+        "Impersonates legitimate website",
+        "Domain registered recently",
+        "SSL certificate issues detected",
+        "Matches known phishing patterns",
+        "Unusual domain structure detected",
+        "Hosted on suspicious IP range",
+        "Contains hidden redirects",
+        "Uses homograph attack characters"
+      ];
+      return indicators[Math.floor(Math.random() * indicators.length)];
+    }
+
+    async function isPhishingUrl(url) {
+      // We no longer need this function since we're just checking http vs https
+      // Keeping it for compatibility
+      return !url.toLowerCase().startsWith('https://');
+    }
+
+    function simulateMalwareScan() {
+      appendMessage('bot', '🦠 Initiating deep malware scan...');
+      
+      const { container, bar } = createProgressBar();
+      chatBody.appendChild(container);
+      
+      // Simulate scan progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        bar.style.width = `${Math.min(progress, 100)}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            container.remove();
+            
+            // Random chance (10%) to find malware for realism
+            if (Math.random() < 0.1) {
+              appendMessage('bot', `<span class="threat-alert">🚨 THREAT DETECTED: 3 malware signatures found!</span><br>
+                • Trojan:Win32/Wacatac.B!ml (Critical)<br>
+                • Behavior:Win32/Generic.ASMalware (Suspicious)<br>
+                • Ransom:Win32/StopCrypt.A (High Risk)<br>
+                <br>Recommendation: Run quarantine and removal immediately.`);
+              appendSystemMessage("Threat alert generated • Incident report logged");
+            } else {
+              appendMessage('bot', '✅ Malware scan complete: No malicious files detected.<br>System integrity verified.');
+            }
+          }, 500);
+        }
+      }, 300);
+    }
+
+    function simulateNetworkScan() {
+      appendMessage('bot', '🌐 Scanning network for threats...');
+      
+      const { container, bar } = createProgressBar();
+      chatBody.appendChild(container);
+      
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 20;
+        bar.style.width = `${Math.min(progress, 100)}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            container.remove();
+            
+            if (Math.random() < 0.15) {
+              appendMessage('bot', `<span class="threat-alert">🚨 NETWORK THREAT: Suspicious device detected!</span><br>
+                • IP: 192.168.1.105<br>
+                • MAC: 00:1A:79:XX:XX:XX<br>
+                • Behavior: Port scanning detected<br>
+                <br>Recommendation: Isolate device and investigate further.`);
+              appendSystemMessage("Network intrusion detected • Security protocol activated");
+            } else {
+              appendMessage('bot', '🛡️ Network scan complete:<br>' +
+                '• 12 active devices<br>' +
+                '• All devices authenticated<br>' +
+                '• No suspicious traffic detected');
+            }
+          }, 500);
+        }
+      }, 200);
+    }
+
+    function simulatePhishingCheck() {
+      appendMessage('bot', '🔗 Analyzing recent emails and URLs for phishing...');
+      
+      setTimeout(() => {
+        if (Math.random() < 0.2) {
+          appendMessage('bot', `<span class="threat-alert">🚨 PHISHING ATTEMPT DETECTED!</span><br>
+            • Suspicious email: "Urgent: Update Your Account Now"<br>
+            • Fake URL: accounts-update[.]com (disguised as your bank)<br>
+            <br>Recommendation: Mark as spam and delete. Do not click links.`);
+          appendSystemMessage("Phishing attempt blocked • User alerted");
+        } else {
+          appendMessage('bot', '🎣 Phishing check complete:<br>' +
+            '• Scanned 42 emails and 18 URLs<br>' +
+            '• No verified phishing attempts found<br>' +
+            '• 2 suspicious items moved to quarantine');
+        }
+      }, 1500);
+    }
+
+    function simulateVulnerabilityScan() {
+      appendMessage('bot', '🔍 Scanning system for vulnerabilities...');
+      
+      const { container, bar } = createProgressBar();
+      chatBody.appendChild(container);
+      
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 10;
+        bar.style.width = `${Math.min(progress, 100)}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            container.remove();
+            
+            const vulnerabilities = Math.floor(Math.random() * 5);
+            if (vulnerabilities > 0) {
+              appendMessage('bot', `<span class="threat-alert">⚠️ ${vulnerabilities} SYSTEM VULNERABILITIES FOUND!</span><br>
+                • CVE-2023-1234 (Critical: 9.8/10)<br>
+                • Outdated Java Runtime (High Risk)<br>
+                • Weak password policies detected<br>
+                <br>Recommendation: Apply patches immediately.`);
+              appendSystemMessage("Vulnerability report generated • Patch management notified");
+            } else {
+              appendMessage('bot', '🛡️ Vulnerability scan complete:<br>' +
+                '• All critical patches applied<br>' +
+                '• No high-risk vulnerabilities found<br>' +
+                '• System meets 98% of security benchmarks');
+            }
+          }, 500);
+        }
+      }, 400);
+    }
+
+    function simulateRansomwareCheck() {
+      appendMessage('bot', '💰 Scanning for ransomware activity...');
+      
+      setTimeout(() => {
+        if (Math.random() < 0.05) {
+          appendMessage('bot', `<span class="threat-alert">🚨 RANSOMWARE INDICATORS FOUND!</span><br>
+            • Suspicious file encryption detected<br>
+            • Known ransomware signature: STOP/DJVU<br>
+            • 3 files potentially compromised<br>
+            <br>EMERGENCY ACTION: Isolate system and contact security team.`);
+          appendSystemMessage("Ransomware alert • Incident response initiated");
+        } else {
+          appendMessage('bot', '✅ Ransomware detection:<br>' +
+            '• No encryption patterns detected<br>' +
+            '• Backup systems verified<br>' +
+            '• Ransomware protection active');
+        }
+      }, 1200);
+    }
+
+    function checkFirewallStatus() {
+      appendMessage('bot', '🧱 Checking firewall configuration...');
+      
+      setTimeout(() => {
+        appendMessage('bot', '🛡️ Firewall status:<br>' +
+          '• Active and monitoring all ports<br>' +
+          '• 42 intrusion attempts blocked today<br>' +
+          '• Ruleset version: FW-2023-11<br>' +
+          '• Automatic updates enabled');
+      }, 1000);
+    }
+
+    function checkSystemLogs() {
+      appendMessage('bot', '📄 Reviewing security logs...');
+      
+      setTimeout(() => {
+        appendMessage('bot', '📊 Recent security activity:<br>' +
+          '• Last 24 hours: 128 events<br>' +
+          '• 3 failed login attempts<br>' +
+          '• 1 new device connected (verified)<br>' +
+          '• No critical alerts');
+      }, 1500);
+    }
+
+    function showHelp() {
+      appendMessage('bot', `🛡️ <strong>CyberAI Assistance Guide</strong><br><br>
+        I can help with these cybersecurity tasks:<br><br>
+        
+        <strong>Threat Detection</strong><br>
+        • Malware scanning and removal<br>
+        • Ransomware detection<br>
+        • Phishing attempt analysis<br><br>
+        
+        <strong>Network Security</strong><br>
+        • Device scanning<br>
+        • Intrusion detection<br>
+        • Suspicious traffic analysis<br><br>
+        
+        <strong>System Protection</strong><br>
+        • Vulnerability assessment<br>
+        • Firewall configuration<br>
+        • Security patch status<br><br>
+        
+        <strong>Test URLs for Security Detection:</strong><br>
+        • http://example.com (UNSAFE - HTTP)<br>
+        • https://example.com (SAFE - HTTPS)<br>
+        • http://insecure-banking.com (UNSAFE - HTTP)<br>
+        • https://secure-banking.com (SAFE - HTTPS)`);
+    }
+
+    userInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // Initial focus on input
+    userInput.focus();
+  </script>
+</body>
+</html>
